@@ -17,12 +17,12 @@
 
 ## Phases
 
-### 0. Foundation (done, except deployment setup)
+### 0. Foundation (done, live at rim95.dev since 2026-10-21)
 
 - [x] Astro 7, content schemas (notes, resume), per-language pages (home, note list, note, resume, 404, RSS), sitemap, robots.txt
 - [x] Language-picking Worker, address bar cleanup, language switch, dev-server equivalent
 - [x] Checks (`npm run check`), unit tests, GitHub Actions (production, previews, daily scheduled notes)
-- [ ] First deploy, token, secrets, dashboard settings: owner, see [deploy.md](deploy.md) §2 and §4
+- [x] First deploy through Actions, API token, secrets, dashboard settings: see [deploy.md](deploy.md) §2 and §4
 
 ### 1. Design (done 2026-10-21)
 
@@ -42,10 +42,12 @@
 
 ### 3. SEO and GEO
 
-- JSON-LD: `BlogPosting`, `ProfilePage` + `Person` (`sameAs`), `BreadcrumbList`, `WebSite`
-- `/llms.txt`, a raw `.md` per note, full-content RSS
-- Search engine registration, Crawler Hints, Web Analytics: see [deploy.md](deploy.md) §4 and §5
-- Confirm in Search Console that both language URLs get indexed
+- [x] Search engine registration (Google, Bing, Naver, Daum) and sitemaps: see [deploy.md](deploy.md) §5
+- [ ] After the first note: submit RSS `https://rim95.dev/ko/rss.xml` to Naver and Daum (Naver rejects a feed with no items)
+- [ ] Confirm in Search Console that both language URLs get indexed
+- [ ] JSON-LD: `BlogPosting`, `ProfilePage` + `Person` (`sameAs`), `BreadcrumbList`, `WebSite`
+- [ ] `/llms.txt`, a raw `.md` per note, full-content RSS
+- [ ] Web Analytics, if wanted
 
 ### 4. Interaction
 
