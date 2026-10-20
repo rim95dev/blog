@@ -70,5 +70,5 @@ Local `wrangler dev` rewrites the request Host to the production domain, so the 
 |---|---|---|
 | Google Search Console | Domain property `rim95.dev` (DNS TXT, added automatically through Cloudflare) | `https://rim95.dev/sitemap-index.xml` |
 | Bing Webmaster Tools | Import from Search Console | Sitemap |
-| Naver Search Advisor | `https://rim95.dev` (HTML tag verification; the tag goes in the head of `Base.astro`) | Sitemap, RSS `https://rim95.dev/ko/rss.xml` |
-| Daum Webmaster Tools | `https://rim95.dev` | Sitemap |
+| Naver Search Advisor | `https://rim95.dev` (HTML tag: `SITE.verification.naver` in `src/site.ts`, printed in the head by `Base.astro`) | Sitemap, RSS `https://rim95.dev/ko/rss.xml` |
+| Daum Webmaster Tools | `https://rim95.dev` (the `#DaumWebMasterTool:…` line in `public/robots.txt`) | Sitemap, RSS `https://rim95.dev/ko/rss.xml` |

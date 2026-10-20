@@ -6,6 +6,10 @@ export const SITE = {
 	author: 'rim95dev',
 	email: 'rim95dev@gmail.com',
 	github: 'https://github.com/rim95dev',
+	/** Search engine ownership checks (docs/deploy.md §5). Daum's goes in public/robots.txt instead */
+	verification: {
+		naver: 'f1e766e10c25028b0116df933f3f8bea6d1d23ce',
+	},
 	/** The Contribution Defense wall on the home page, rebuilt daily in the rim95dev/rim95dev profile repository */
 	wall: {
 		action: 'https://github.com/marketplace/actions/contribution-defense',

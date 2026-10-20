@@ -4,3 +4,6 @@ Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 
 Sitemap: https://rim95.dev/sitemap-index.xml
+
+# Daum Webmaster Tools ownership check
+#DaumWebMasterTool:55d47cd82e1427ded7a6fcbf4b4b38913def21c344a48d13719c3a5ee51be8d7:sgQJn+c4WOkeYlgoF2KRow==
