@@ -1,0 +1,71 @@
+# Check → build → deploy. main deploys to rim95.dev; other branches get a Workers preview (drafts included, noindex).
+# Without the Cloudflare secrets it only checks and builds. Setup: docs/deploy.md.
+name: Deploy
+
+on:
+  push:
+    branches: ['**']
+  schedule:
+    # Daily at 09:10 KST (00:10 UTC): publishes notes scheduled for today
+    - cron: '10 0 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
+      HAS_CLOUDFLARE: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check (types, worker, tests)
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+        env:
+          SHOW_DRAFTS: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Deploy to rim95.dev
+        if: env.IS_MAIN == 'true' && env.HAS_CLOUDFLARE == 'true'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      - name: Preview name
+        id: preview-name
+        if: env.IS_MAIN != 'true' && env.HAS_CLOUDFLARE == 'true'
+        run: |
+          name=$(printf '%s' "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-' | tr -s '-' | sed 's/^-//; s/-$//' | cut -c1-40)
+          echo "name=${name:-preview}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy preview
+        if: env.IS_MAIN != 'true' && env.HAS_CLOUDFLARE == 'true'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: preview --name ${{ steps.preview-name.outputs.name }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cloudflare secrets missing
+        if: env.HAS_CLOUDFLARE != 'true'
+        run: echo "::notice::Skipped deploy: CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID secrets are not set (docs/deploy.md)"

@@ -1,0 +1,30 @@
+---
+import { formatDate } from '../i18n';
+import type { Note } from '../notes';
+
+interface Props {
+	notes: Note[];
+}
+
+const { notes } = Astro.props;
+---
+
+<ul class="note-list">
+	{
+		notes.map(({ slug, entry }) => (
+			<li data-tags={entry.data.tags.join(' ')}>
+				<a href={`/notes/${slug}`}>
+					<time datetime={entry.data.pubDate.toISOString()}>{formatDate(entry.data.pubDate)}</time>
+					<span class="title">{entry.data.title}</span>
+					{entry.data.tags.length > 0 && (
+						<span class="tags">
+							{entry.data.tags.map((tag) => (
+								<span>#{tag}</span>
+							))}
+						</span>
+					)}
+				</a>
+			</li>
+		))
+	}
+</ul>

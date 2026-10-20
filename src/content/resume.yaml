@@ -1,0 +1,71 @@
+# Career data: the career page (/resume) and the career box on the home page are both built from this file.
+#
+# - Text shown to readers is { ko: …, en: … }. Company names can be a plain string when they are the same in both languages.
+# - Dates are YYYY-MM, or YYYY-MM-DD when the exact day matters (both ends need a day for day counting).
+#   Leave `end` out while it is ongoing. Durations and totals are computed at build time; the site rebuilds daily.
+# - logo: a file name in src/assets/logos without .png (square, 128 × 128 or larger).
+# - place.flag: kr, ae or us (src/assets/flags; see src/assets.ts to add one).
+# - Newest first.
+
+experience:
+  - company: Nexon Universe
+    logo: nexon-universe
+    role: { ko: 블록체인 개발, en: Blockchain engineer }
+    start: 2024-04
+    place: { flag: kr, city: { ko: 판교, en: Pangyo } }
+    within:
+      - company: NEXPACE
+        logo: nexpace
+        start: 2025-01
+        place: { flag: ae, city: { ko: 아부다비, en: Abu Dhabi } }
+    work:
+      - project: MapleStory Universe
+        detail: { ko: 스마트 컨트랙트 · 백엔드, en: Smart Contract · Backend }
+    stack: [Go, Node.js, Solidity]
+
+  - company: Hexlant
+    logo: hexlant
+    now: { name: Hecto Walletone, logo: hecto }
+    role: { ko: 블록체인 개발, en: Blockchain engineer }
+    start: 2022-08
+    end: 2024-04
+    place: { flag: kr, city: { ko: 강남, en: Gangnam } }
+    work:
+      - detail: { ko: 스마트 컨트랙트 · 오딧 · 백엔드 · 신한은행 NFT, en: Smart Contract · Audit · Backend · Shinhan Bank NFT }
+    stack: [Node.js, Solidity]
+
+  - company: AfreecaTV Freemeta
+    logo: afreecatv
+    now: { name: SOOP, logo: soop }
+    role: { ko: 블록체인 개발, en: Blockchain engineer }
+    start: 2022-02
+    end: 2022-08
+    place: { flag: kr, city: { ko: 판교, en: Pangyo } }
+    work:
+      - detail: { ko: NFT 마켓플레이스 · 백엔드 · 코인발행 · 백서, en: NFT Marketplace · Backend · Coin Issuance · Whitepaper }
+    stack: [Go, Node.js, Solidity]
+
+education:
+  - school: { ko: 서강대학교, en: Sogang University }
+    logo: sogang
+    degree: { ko: 전자공학과 석사 · 블록체인 연구실, en: M.S. in Electronic Engineering · Blockchain Lab }
+    short: { ko: 석사 · 서강대학교 전자공학과, en: M.S. in Electronic Engineering · Sogang University }
+    start: 2020-03
+    end: 2022-02
+    research: { ko: 블록체인 석사, en: blockchain M.S. }
+
+  - school: { ko: 서강대학교, en: Sogang University }
+    logo: sogang
+    degree: { ko: 전자공학과 학사, en: B.S. in Electronic Engineering }
+    start: 2014-04
+    end: 2020-02
+    exclude: military
+
+etc:
+  - id: military
+    title: { ko: 병역, en: Military service }
+    short: { ko: 군 복무, en: military service }
+    logo: army
+    detail: { ko: 육군 현역 만기전역, en: "Republic of Korea Army · Active duty, honorably discharged" }
+    start: 2015-09-15
+    end: 2017-06-14

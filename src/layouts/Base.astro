@@ -1,0 +1,258 @@
+---
+/* Base.astro — the frame of every page: head (SEO, hreflang pairs, theme), header, footer, ⌘K palette, console greeting.
+ * `path` is the language-free clean URL. This HTML is served both at /ko/… and, through the Worker, at the clean URL,
+ * so every internal link uses the clean URL.
+ */
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+import '@fontsource-variable/jetbrains-mono/wght.css';
+import '../styles/global.css';
+import { flag } from '../assets';
+import { getProfile } from '../career';
+import { spritePng } from '../character/icons';
+import { BODY } from '../character/sprite';
+import { OG_LOCALE, t } from '../i18n';
+import { CARD } from '../og';
+import { DEFAULT_LANG, LANG_COOKIE, LANGS, toLangPath, type Lang } from '../lang';
+import { SITE, SITE_COLORS } from '../site';
+
+interface Props {
+	lang: Lang;
+	/** Clean URL ('/', '/notes/abc') */
+	path: string;
+	title?: string;
+	description?: string;
+	/** Languages this page exists in (default: all). Used by single-language notes. */
+	langs?: readonly Lang[];
+	type?: 'website' | 'article';
+	noindex?: boolean;
+}
+
+const { lang, path, title, description = t(lang, 'site.description'), langs = LANGS, type = 'website', noindex = false } = Astro.props;
+
+const fullTitle = title ? `${title} · ${SITE.name}` : SITE.name;
+const abs = (l: Lang, p: string) => new URL(toLangPath(l, p), SITE.url).toString();
+const canonical = abs(lang, path);
+const xDefaultLang = langs.includes(DEFAULT_LANG) ? DEFAULT_LANG : langs[0];
+
+const other: Lang = lang === 'ko' ? 'en' : 'ko';
+// Without a version in the other language, switch to that language's note list
+const switchPath = langs.includes(other) ? path : '/notes';
+const switchLabel = `${t(lang, 'lang.name')} → ${t(other, 'lang.name')}`;
+
+const section = path === '/notes' || path.startsWith('/notes/') ? 'notes' : path === '/resume' ? 'career' : null;
+const pages = [
+	{ label: 'Home', href: '/' },
+	{ label: t(lang, 'nav.notes'), href: '/notes' },
+	{ label: t(lang, 'nav.career'), href: '/resume' },
+];
+
+const profile = await getProfile();
+// The console only draws data: URLs, so the character goes inline (20 × 28 dots at 5 px, about 600 bytes).
+// JSON inside <script>: escape '<' so the text can never close the tag.
+const greeting = JSON.stringify({
+	art: `data:image/png;base64,${Buffer.from(spritePng(BODY, 5)).toString('base64')}`,
+	lines: profile.greeting.map((line) => line[lang]),
+}).replace(/</g, '\\u003c');
+const THEME_KEY = 'theme';
+---
+
+<!doctype html>
+<html lang={lang}>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		{/* The theme the visitor picked, applied before the first paint. Without one the page follows the system. */}
+		<script is:inline define:vars={{ key: THEME_KEY }}>
+			try {
+				const theme = localStorage.getItem(key);
+				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+			} catch {}
+		</script>
+		<title>{fullTitle}</title>
+		<meta name="description" content={description} />
+		{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+		{!noindex && langs.map((l) => <link rel="alternate" hreflang={l} href={abs(l, path)} />)}
+		{!noindex && xDefaultLang && <link rel="alternate" hreflang="x-default" href={abs(xDefaultLang, path)} />}
+
+		<meta property="og:type" content={type} />
+		<meta property="og:site_name" content={SITE.name} />
+		<meta property="og:title" content={title ?? SITE.name} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:locale" content={OG_LOCALE[lang]} />
+		{langs.filter((l) => l !== lang).map((l) => <meta property="og:locale:alternate" content={OG_LOCALE[l]} />)}
+		<meta property="og:image" content={new URL(`/og/${lang}.png`, SITE.url).toString()} />
+		<meta property="og:image:type" content="image/png" />
+		<meta property="og:image:width" content={String(CARD.width)} />
+		<meta property="og:image:height" content={String(CARD.height)} />
+		<meta property="og:image:alt" content={`rim95.dev · ${profile.name[lang]} · ${profile.role[lang]}`} />
+		<meta name="twitter:card" content="summary_large_image" />
+
+		<meta name="theme-color" content={SITE_COLORS.light} media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content={SITE_COLORS.dark} media="(prefers-color-scheme: dark)" />
+		<link rel="alternate" type="application/rss+xml" title={SITE.name} href={`/${lang}/rss.xml`} />
+		<link rel="sitemap" href="/sitemap-index.xml" />
+		<link rel="icon" href="/favicon.ico" sizes="any" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<meta name="generator" content={Astro.generator} />
+
+		{/* Landed on a language URL (/ko/…): remember the language and show the clean URL in the address bar (no reload) */}
+		<script is:inline define:vars={{ cookie: LANG_COOKIE }}>
+			(() => {
+				const m = /^\/(ko|en)(\/.*)?$/.exec(location.pathname);
+				if (!m) return;
+				document.cookie = `${cookie}=${m[1]}; Path=/; Max-Age=31536000; SameSite=Lax; Secure`;
+				history.replaceState(history.state, '', (m[2] || '/') + location.search + location.hash);
+			})();
+		</script>
+	</head>
+	<body>
+		<header class="site-header wrap">
+			<a class="logo" href="/">rim95<span class="tld" data-text=".dev">.dev</span></a>
+			<nav class="nav">
+				<a href="/notes" aria-current={section === 'notes' ? 'page' : undefined}>{t(lang, 'nav.notes')}</a>
+				<a href="/resume" aria-current={section === 'career' ? 'page' : undefined}>{t(lang, 'nav.career')}</a>
+				<a class="lang-flag" href={toLangPath(other, switchPath)} hreflang={other} title={switchLabel}>
+					<img src={flag(lang === 'ko' ? 'kr' : 'us').src} alt={switchLabel} width="21" height="14" />
+				</a>
+				<button class="icon-btn" type="button" data-action="search" aria-label={t(lang, 'search.label')}><kbd>⌘K</kbd></button>
+				<button class="icon-btn" type="button" data-action="theme" aria-label={t(lang, 'theme.toggle')} title={t(lang, 'theme.toggle')}>◐</button>
+			</nav>
+		</header>
+
+		<main class="wrap">
+			<slot />
+		</main>
+
+		<footer class="site-footer wrap">
+			<span class="sign">
+				<span class="mini-character" data-character data-split="1" data-radius="2.2" data-burst="6" data-pad="8" data-near="12" data-crop={BODY.join(',')} role="img" aria-label={SITE.name}></span>
+				© {new Date().getFullYear()} {SITE.name}
+			</span>
+			<nav>
+				<a href={SITE.github} rel="me">GitHub</a>
+				<a href={`mailto:${SITE.email}`}>Contact</a>
+				<a href={`/${lang}/rss.xml`}>RSS</a>
+			</nav>
+		</footer>
+
+		<div class="palette" hidden>
+			<div class="palette-box" role="dialog" aria-modal="true" aria-label={t(lang, 'search.label')}>
+				<input class="palette-input" autocomplete="off" spellcheck="false" placeholder={t(lang, 'search.placeholder')} aria-label={t(lang, 'search.placeholder')} />
+				<ul class="palette-list">
+					{
+						pages.map((page) => (
+							<li>
+								<a href={page.href}>
+									<span>{page.label}</span>
+									<small>{t(lang, 'search.page')}</small>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+				<p class="palette-foot">
+					<kbd>↑</kbd><kbd>↓</kbd>
+					{t(lang, 'search.move')}
+					<kbd>Enter</kbd>
+					{t(lang, 'search.open')}
+					<kbd>Esc</kbd>
+					{t(lang, 'search.close')}
+				</p>
+			</div>
+		</div>
+
+		<script type="application/json" id="greeting" set:html={greeting} />
+
+		<script>
+			import { mountCharacter } from '../character/mount';
+			import { LANG_COOKIE, splitLangPath } from '../lang';
+			import { SITE } from '../site';
+
+			document.querySelectorAll<HTMLElement>('[data-character]').forEach(mountCharacter);
+
+			// Theme button: flips the theme on screen and remembers it (the head script applies it on the next page)
+			document.querySelector('[data-action="theme"]')?.addEventListener('click', () => {
+				const root = document.documentElement;
+				const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+				root.dataset.theme = dark ? 'light' : 'dark';
+				try {
+					localStorage.setItem('theme', root.dataset.theme); // THEME_KEY above
+				} catch {}
+			});
+
+			// Language switch: change the cookie and reopen the clean URL. Without JS the link (a language URL) just works.
+			document.querySelector<HTMLAnchorElement>('a.lang-flag')?.addEventListener('click', (event) => {
+				const link = event.currentTarget as HTMLAnchorElement;
+				const target = splitLangPath(new URL(link.href).pathname);
+				if (!target) return;
+				event.preventDefault();
+				const [lang, cleanPath] = target;
+				document.cookie = `${LANG_COOKIE}=${lang}; Path=/; Max-Age=31536000; SameSite=Lax; Secure`;
+				if (cleanPath === location.pathname) location.reload();
+				else location.assign(cleanPath);
+			});
+
+			// ⌘K (Ctrl K elsewhere): jump to a page
+			const palette = document.querySelector<HTMLElement>('.palette');
+			const input = palette?.querySelector<HTMLInputElement>('.palette-input');
+			const searchButton = document.querySelector<HTMLButtonElement>('[data-action="search"]');
+			if (palette && input && searchButton) {
+				// Keyboards outside Apple devices: Ctrl K (phones and tablets keep the default label)
+				if (!/Mac|iPhone|iPad/.test(navigator.userAgent) && matchMedia('(pointer: fine)').matches) searchButton.querySelector('kbd')!.textContent = 'Ctrl K';
+				const items = [...palette.querySelectorAll<HTMLLIElement>('.palette-list li')];
+				let shown: HTMLAnchorElement[] = [];
+				let active = 0;
+				const render = () => {
+					const query = input.value.trim().toLowerCase();
+					for (const item of items) item.hidden = !item.querySelector('span')!.textContent!.toLowerCase().includes(query);
+					shown = items.filter((item) => !item.hidden).map((item) => item.querySelector('a')!);
+					active = Math.min(active, Math.max(shown.length - 1, 0));
+					shown.forEach((link, i) => link.classList.toggle('on', i === active));
+				};
+				const open = () => {
+					palette.hidden = false;
+					input.value = '';
+					active = 0;
+					render();
+					input.focus();
+				};
+				const close = () => (palette.hidden = true);
+				searchButton.addEventListener('click', open);
+				input.addEventListener('input', () => {
+					active = 0;
+					render();
+				});
+				palette.addEventListener('click', (event) => {
+					if (event.target === palette) close();
+				});
+				document.addEventListener('keydown', (event) => {
+					if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+						event.preventDefault();
+						if (palette.hidden) open();
+						else close();
+					} else if (!palette.hidden) {
+						if (event.key === 'Escape') close();
+						else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+							event.preventDefault();
+							active = Math.min(Math.max(active + (event.key === 'ArrowDown' ? 1 : -1), 0), shown.length - 1);
+							render();
+						} else if (event.key === 'Enter' && shown[active]) location.assign(shown[active].href);
+					}
+				});
+			}
+
+			// For visitors who open the developer console: the character, a few lines from src/content/profile.yaml and the email address
+			const greeting = document.getElementById('greeting');
+			if (greeting) {
+				const { art, lines } = JSON.parse(greeting.textContent || '{}') as { art: string; lines: string[] };
+				const [title, ...rest] = lines;
+				console.log('%c ', `font-size: 1px; padding: 70px 50px; background: url(${art}) no-repeat center / 100px 140px;`);
+				if (title) console.log(`%c${title}`, 'font: 600 15px/1.6 system-ui, sans-serif; color: #1a7f37;');
+				for (const line of rest) console.log(`%c${line}`, 'font: 13px/1.6 system-ui, sans-serif; color: #6e7781;');
+				console.log(`%c${SITE.email}`, 'font: 12px/1.6 ui-monospace, monospace; color: #0969da;');
+			}
+		</script>
+	</body>
+</html>

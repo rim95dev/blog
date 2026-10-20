@@ -1,0 +1,15 @@
+---
+/* A small flag and a city: 🇰🇷 Pangyo */
+import { flag, type Flag } from '../assets';
+import { t } from '../i18n';
+import type { Lang } from '../lang';
+
+interface Props {
+	lang: Lang;
+	place: { flag: Flag; city: Record<Lang, string> };
+}
+
+const { lang, place } = Astro.props;
+---
+
+<img class="place-flag" src={flag(place.flag).src} alt={t(lang, `country.${place.flag}`)} width="15" height="10" />{place.city[lang]}

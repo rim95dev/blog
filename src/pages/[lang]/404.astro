@@ -1,0 +1,12 @@
+---
+import NotFound from '../../components/NotFound.astro';
+import { LANGS, type Lang } from '../../lang';
+
+export function getStaticPaths() {
+	return LANGS.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+---
+
+<NotFound lang={lang} />

@@ -1,0 +1,171 @@
+---
+import { logo } from '../../assets';
+import OrgName from '../../components/OrgName.astro';
+import Place from '../../components/Place.astro';
+import Base from '../../layouts/Base.astro';
+import { careerTotal, duration, getProfile, getResume, jobId, range, researchNote, schoolLength } from '../../career';
+import { t } from '../../i18n';
+import { LANGS, type Lang } from '../../lang';
+import { SITE } from '../../site';
+
+export function getStaticPaths() {
+	return LANGS.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const profile = await getProfile();
+const resume = await getResume();
+const { experience, education, etc } = resume;
+
+const total = careerTotal(lang, resume);
+const research = researchNote(lang, resume);
+// Ongoing positions: 'Blockchain engineer · Nexon Universe (NEXPACE)'
+const current = experience
+	.filter((job) => !job.end)
+	.map((job) => {
+		const within = job.within.filter((sub) => !sub.end).map((sub) => sub.company[lang]);
+		return `${job.role[lang]} · ${job.company[lang]}${within.length > 0 ? ` (${within.join(', ')})` : ''}`;
+	});
+const school = education[0]?.short?.[lang];
+---
+
+<Base lang={lang} path="/resume" title={t(lang, 'resume.title')} description={profile.summary[lang].replace(/\s*\n\s*/g, ' ')}>
+	<header class="resume-head">
+		<h1>{profile.name[lang]}</h1>
+		<p class="role">{profile.role[lang]}</p>
+		<p class="summary">{profile.summary[lang]}</p>
+	</header>
+
+	<section class="glance">
+		<dl>
+			{
+				total && (
+					<>
+						<dt>{t(lang, 'resume.experience')}</dt>
+						<dd>
+							{total}{research && <span class="research">{research}</span>}
+						</dd>
+					</>
+				)
+			}
+			{
+				current.length > 0 && (
+					<>
+						<dt>{t(lang, 'resume.current')}</dt>
+						<dd>{current.join(' / ')}</dd>
+					</>
+				)
+			}
+			{
+				school && (
+					<>
+						<dt>{t(lang, 'resume.education')}</dt>
+						<dd>{school}</dd>
+					</>
+				)
+			}
+			<dt>{t(lang, 'resume.contact')}</dt>
+			<dd><a href={`mailto:${SITE.email}`}>{SITE.email}</a></dd>
+		</dl>
+	</section>
+
+	{
+		experience.length > 0 && (
+			<section class="resume-section">
+				<h2 class="section-title">{t(lang, 'resume.experience')}</h2>
+				{experience.map((job) => (
+					<article class="org" id={jobId(job)}>
+						<img class="org-logo" src={logo(job.logo).src} alt="" width="48" height="48" />
+						<div>
+							<h3 class="role-title">{job.role[lang]}</h3>
+							<p class="org-meta">
+								<OrgName lang={lang} job={job} />
+							</p>
+							<p class="role-period">
+								{range(lang, job)} <span class="dur">· {duration(lang, job)}</span>
+							</p>
+							<p class="org-meta">
+								<Place lang={lang} place={job.place} />
+							</p>
+							{job.within.map((sub) => (
+								<div class="sub-org">
+									<img class="sub-logo" src={logo(sub.logo).src} alt="" width="28" height="28" />
+									<div>
+										<p class="sub-name">{sub.company[lang]}</p>
+										<p class="role-period">
+											{range(lang, sub)} <span class="dur">· {duration(lang, sub)}</span>
+										</p>
+										<p class="org-meta">
+											<Place lang={lang} place={sub.place} />
+										</p>
+									</div>
+								</div>
+							))}
+							{job.work.length > 0 && (
+								<div class="work">
+									{job.work.map((item) => (
+										<>
+											{item.project && <p class="project">{item.project[lang]}</p>}
+											<p class="detail">{item.detail[lang]}</p>
+										</>
+									))}
+								</div>
+							)}
+							{job.stack.length > 0 && (
+								<p class="tags">
+									{job.stack.map((name) => (
+										<span>{name}</span>
+									))}
+								</p>
+							)}
+						</div>
+					</article>
+				))}
+			</section>
+		)
+	}
+
+	{
+		education.length > 0 && (
+			<section class="resume-section">
+				<h2 class="section-title">{t(lang, 'resume.education')}</h2>
+				{education.map((item) => {
+					const length = schoolLength(lang, resume, item);
+					return (
+						<article class="org">
+							<img class="org-logo" src={logo(item.logo).src} alt="" width="48" height="48" />
+							<div>
+								<h3 class="role-title">{item.school[lang]}</h3>
+								<p class="org-meta">{item.degree[lang]}</p>
+								<p class="role-period">
+									{range(lang, item)} <span class="dur">· {length.years}</span>
+									{length.note && [' ', <span class="excl">{length.note}</span>]}
+								</p>
+							</div>
+						</article>
+					);
+				})}
+			</section>
+		)
+	}
+
+	{
+		etc.length > 0 && (
+			<section class="resume-section">
+				<h2 class="section-title">{t(lang, 'resume.etc')}</h2>
+				{etc.map((item) => (
+					<article class="org">
+						<img class="org-logo" src={logo(item.logo).src} alt="" width="48" height="48" />
+						<div>
+							<h3 class="role-title">{item.title[lang]}</h3>
+							<p class="org-meta">{item.detail[lang]}</p>
+							<p class="role-period">
+								{range(lang, item)} <span class="dur">· {duration(lang, item)}</span>
+							</p>
+						</div>
+					</article>
+				))}
+			</section>
+		)
+	}
+</Base>

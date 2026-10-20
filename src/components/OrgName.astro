@@ -1,0 +1,26 @@
+---
+/* A company name, with what it is called now: Hexlant (now Hecto Walletone [icon]) */
+import { logo } from '../assets';
+import type { Job } from '../career';
+import { t } from '../i18n';
+import type { Lang } from '../lang';
+
+interface Props {
+	lang: Lang;
+	job: Job;
+}
+
+const { lang, job } = Astro.props;
+---
+
+{job.company[lang]}
+{
+	job.now && (
+		<>
+			{' '}
+			<span class="succ">
+				({t(lang, 'resume.now', { name: job.now.name[lang] })}<img class="now-icon" src={logo(job.now.logo).src} alt="" width="20" height="20" />)
+			</span>
+		</>
+	)
+}

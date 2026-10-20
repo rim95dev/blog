@@ -1,0 +1,34 @@
+# Who the site belongs to. Text shown to readers is written per language as { ko: …, en: … }.
+
+# Career page heading
+name: { ko: 이태림, en: TaeRim Lee }
+role: { ko: 블록체인 개발, en: Blockchain engineer }
+
+# Home page: the heading and paragraph next to the character.
+# Line breaks in hero.body and summary are kept (write them as a |- block like below).
+hero:
+  title: { ko: 안녕하세요! 이태림입니다., en: "Hi! I'm TaeRim Lee." }
+  body:
+    ko: |-
+      스마트 컨트랙트와 블록체인 백엔드를 개발합니다.
+      배운 것과 따로 만드는 것들을 이곳에 기록합니다.
+    en: |-
+      I develop smart contracts and blockchain backends.
+      Here I write about what I learn and what I build on the side.
+
+# Career page: the paragraph under the name (also the page's description in search results, with line breaks as spaces)
+summary:
+  ko: |-
+    블록체인 연구실에서 석사 과정으로 시작해서 지금까지 한 분야를 파고 있습니다.
+    스마트 컨트랙트와 블록체인 백엔드를 개발합니다.
+    지금은 MapleStory Universe 프로젝트에 참여하고 있으며 주로 Go, Node.js, Solidity를 사용합니다.
+  en: |-
+    I started out in a blockchain research lab during my master's and have focused on the field ever since.
+    I develop smart contracts and blockchain backends.
+    I'm currently working on the MapleStory Universe project, mostly with Go, Node.js and Solidity.
+
+# Printed in the browser's developer console under the character, one line each (the first line is the heading).
+# The email address (src/site.ts) follows these lines.
+greeting:
+  - { ko: 안녕하세요! 이태림입니다., en: "Hi! I'm TaeRim Lee." }
+  - { ko: 스마트 컨트랙트와 블록체인 백엔드를 개발합니다., en: I develop smart contracts and blockchain backends. }

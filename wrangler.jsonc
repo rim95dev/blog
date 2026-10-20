@@ -1,0 +1,24 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "rim95-dev",
+	"main": "worker/index.ts",
+	"compatibility_date": "2026-10-01",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS",
+		"html_handling": "auto-trailing-slash",
+		"not_found_handling": "404-page",
+		// Only build output (hashed CSS, JS, images) skips the Worker; every page request goes through it.
+		"run_worker_first": ["/*", "!/_astro/*"]
+	},
+	"vars": {
+		"PROD_HOST": "rim95.dev"
+	},
+	"routes": [
+		{ "pattern": "rim95.dev", "custom_domain": true },
+		{ "pattern": "www.rim95.dev", "custom_domain": true }
+	],
+	"observability": {
+		"enabled": true
+	}
+}

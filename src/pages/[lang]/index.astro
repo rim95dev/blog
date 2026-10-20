@@ -1,0 +1,102 @@
+---
+import { logo } from '../../assets';
+import NoteList from '../../components/NoteList.astro';
+import OrgName from '../../components/OrgName.astro';
+import Place from '../../components/Place.astro';
+import Base from '../../layouts/Base.astro';
+import { careerTotal, getProfile, getResume, jobId, range, researchNote } from '../../career';
+import { t } from '../../i18n';
+import { LANGS, type Lang } from '../../lang';
+import { getNotes } from '../../notes';
+import { SITE } from '../../site';
+
+export function getStaticPaths() {
+	return LANGS.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const profile = await getProfile();
+const resume = await getResume();
+const recent = (await getNotes(lang)).slice(0, 5);
+---
+
+<Base lang={lang} path="/">
+	<section class="hero">
+		<div class="hero-text">
+			<h1 class="hero-title">{profile.hero.title[lang]}</h1>
+			<p class="hero-sub">{profile.hero.body[lang]}</p>
+			<p class="hero-links">
+				<a href={SITE.github} rel="me">GitHub</a>
+				<a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+			</p>
+		</div>
+		<div class="character" data-character data-character-broken role="img" aria-label={SITE.name}></div>
+	</section>
+
+	{
+		resume.experience.length > 0 && (
+			<section class="career">
+				<div class="career-head">
+					<h2 class="section-title">
+						{t(lang, 'home.career')}{' '}
+						<span class="dur">
+							· {careerTotal(lang, resume)}{researchNote(lang, resume) && <span class="research">{researchNote(lang, resume)}</span>}
+						</span>
+					</h2>
+					<a class="more" href="/resume">
+						{t(lang, 'home.viewAll')}
+					</a>
+				</div>
+				{resume.experience.map((job) => (
+					<a class="org compact" href={`/resume#${jobId(job)}`}>
+						<img class="org-logo" src={logo(job.logo).src} alt="" width="32" height="32" />
+						<div>
+							<p class="role-title">
+								{job.role[lang]}
+								<span class="place">
+									<Place lang={lang} place={job.place} />
+								</span>
+							</p>
+							<p class="org-meta">
+								<OrgName lang={lang} job={job} />
+							</p>
+							<p class="role-period">{range(lang, job)}</p>
+							{job.within.map((sub) => (
+								<p class="sub-line">
+									<img class="sub-logo" src={logo(sub.logo).src} alt="" width="16" height="16" />
+									<span class="sub-name">{sub.company[lang]}</span>
+									<span class="place">
+										<Place lang={lang} place={sub.place} />
+									</span>
+									<span class="role-period">{range(lang, sub)}</span>
+								</p>
+							))}
+						</div>
+					</a>
+				))}
+			</section>
+		)
+	}
+
+	<figure class="wall">
+		<figcaption><a href={SITE.wall.action}>$ ./contribution-defense --today</a></figcaption>
+		<img class="only-light" src={SITE.wall.light} alt="Contribution Defense" loading="lazy" />
+		<img class="only-dark" src={SITE.wall.dark} alt="Contribution Defense" loading="lazy" />
+	</figure>
+
+	<section>
+		<h2 class="section-title">{t(lang, 'home.recent')}</h2>
+		{
+			recent.length > 0 ? (
+				<>
+					<NoteList notes={recent} />
+					<a class="more" href="/notes">
+						{t(lang, 'home.viewAll')}
+					</a>
+				</>
+			) : (
+				<p class="empty">{t(lang, 'notes.empty')}</p>
+			)
+		}
+	</section>
+</Base>

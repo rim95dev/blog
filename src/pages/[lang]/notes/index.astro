@@ -1,0 +1,79 @@
+---
+import NoteList from '../../../components/NoteList.astro';
+import Base from '../../../layouts/Base.astro';
+import { t } from '../../../i18n';
+import { LANGS, type Lang } from '../../../lang';
+import { getNotes, type Note } from '../../../notes';
+
+export function getStaticPaths() {
+	return LANGS.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const notes = await getNotes(lang);
+
+// Most used tags first
+const counts = new Map<string, number>();
+for (const tag of notes.flatMap((note) => note.entry.data.tags)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+const tags = [...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)! || a.localeCompare(b));
+
+// Grouped by year (Korean time), newest first
+const years = new Map<string, Note[]>();
+for (const note of notes) {
+	const year = String(new Date(note.entry.data.pubDate.getTime() + 9 * 3600_000).getUTCFullYear());
+	years.set(year, [...(years.get(year) ?? []), note]);
+}
+---
+
+<Base lang={lang} path="/notes" title={t(lang, 'notes.title')}>
+	<header class="post-head">
+		<h1 class="post-title">{t(lang, 'notes.title')}</h1>
+	</header>
+	{
+		notes.length === 0 ? (
+			<p class="empty">{t(lang, 'notes.empty')}</p>
+		) : (
+			<>
+				{tags.length > 0 && (
+					<div class="chips" role="group">
+						<button class="chip" type="button" data-tag="" aria-pressed="true">
+							{t(lang, 'notes.all')}
+						</button>
+						{tags.map((tag) => (
+							<button class="chip" type="button" data-tag={tag} aria-pressed="false">
+								{tag}
+							</button>
+						))}
+					</div>
+				)}
+				{[...years].map(([year, list]) => (
+					<section class="year-group">
+						<h2 class="year">{year}</h2>
+						<NoteList notes={list} />
+					</section>
+				))}
+			</>
+		)
+	}
+</Base>
+
+<script>
+	// Tag filter: the chips, or /notes?tag=… from a tag on a note page
+	const chips = [...document.querySelectorAll<HTMLButtonElement>('.chip')];
+	const filter = (tag: string) => {
+		chips.forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.tag === tag)));
+		document.querySelectorAll<HTMLElement>('.note-list li').forEach((item) => {
+			item.hidden = tag !== '' && !(item.dataset.tags ?? '').split(' ').includes(tag);
+		});
+		document.querySelectorAll<HTMLElement>('.year-group').forEach((group) => {
+			group.hidden = !group.querySelector('li:not([hidden])');
+		});
+		const url = new URL(location.href);
+		if (tag) url.searchParams.set('tag', tag);
+		else url.searchParams.delete('tag');
+		history.replaceState(history.state, '', url);
+	};
+	chips.forEach((chip) => chip.addEventListener('click', () => filter(chip.dataset.tag ?? '')));
+	const initial = new URLSearchParams(location.search).get('tag');
+	if (initial && chips.some((chip) => chip.dataset.tag === initial)) filter(initial);
+</script>

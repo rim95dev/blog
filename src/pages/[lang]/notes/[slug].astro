@@ -1,0 +1,131 @@
+---
+import { render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import { formatDate, t } from '../../../i18n';
+import { getAllNotes, getNoteLangs, readingMinutes, type Note } from '../../../notes';
+
+export async function getStaticPaths() {
+	const langsBySlug = await getNoteLangs();
+	const all = await getAllNotes();
+	return all.map((note) => {
+		// Neighbors in the same language: older on the left, newer on the right
+		const same = all.filter((other) => other.lang === note.lang);
+		const i = same.indexOf(note);
+		return {
+			params: { lang: note.lang, slug: note.slug },
+			props: { note, langs: langsBySlug.get(note.slug) ?? [note.lang], older: same[i + 1], newer: same[i - 1] },
+		};
+	});
+}
+
+interface Props {
+	note: Note;
+	langs: Note['lang'][];
+	older?: Note | undefined;
+	newer?: Note | undefined;
+}
+
+const { note, langs, older, newer } = Astro.props;
+const { lang, slug, entry } = note;
+const { title, description, pubDate, updatedDate, tags, draft } = entry.data;
+const { Content, headings } = await render(entry);
+// Second-level headings, without the footnote heading that GitHub-flavored Markdown adds
+const toc = headings.filter((heading) => heading.depth === 2 && heading.slug !== 'footnote-label');
+---
+
+<Base lang={lang} path={`/notes/${slug}`} title={title} description={description} langs={langs} type="article" noindex={draft}>
+	<div class="progress" aria-hidden="true"></div>
+	<article data-copy={t(lang, 'note.copy')} data-copied={t(lang, 'note.copied')}>
+		<header class="post-head">
+			<h1 class="post-title">{title}</h1>
+			<p class="post-meta">
+				<time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+				{updatedDate && <span>{t(lang, 'note.updated', { date: formatDate(updatedDate) })}</span>}
+				<span>{t(lang, 'note.readTime', { n: readingMinutes(note) })}</span>
+				{
+					tags.length > 0 && (
+						<span class="tags">
+							{tags.map((tag) => (
+								<a href={`/notes?tag=${encodeURIComponent(tag)}`}>#{tag}</a>
+							))}
+						</span>
+					)
+				}
+				{draft && <span>draft</span>}
+			</p>
+		</header>
+		{
+			toc.length > 1 && (
+				<nav class="toc">
+					<strong>{t(lang, 'note.toc')}</strong>
+					<ol>
+						{toc.map((heading) => (
+							<li>
+								<a href={`#${heading.slug}`}>{heading.text}</a>
+							</li>
+						))}
+					</ol>
+				</nav>
+			)
+		}
+		<div class="prose">
+			<Content />
+		</div>
+		{
+			(older || newer) && (
+				<nav class="post-nav">
+					{older && (
+						<a class="prev" href={`/notes/${older.slug}`}>
+							<small>{t(lang, 'note.prev')}</small>
+							{older.entry.data.title}
+						</a>
+					)}
+					{newer && (
+						<a class="next" href={`/notes/${newer.slug}`}>
+							<small>{t(lang, 'note.next')}</small>
+							{newer.entry.data.title}
+						</a>
+					)}
+				</nav>
+			)
+		}
+	</article>
+</Base>
+
+<script>
+	const article = document.querySelector<HTMLElement>('article[data-copy]');
+
+	// Copy buttons on code blocks (integrations/code-figure.ts renders them hidden, for browsers without JS)
+	article?.querySelectorAll<HTMLButtonElement>('.code .copy').forEach((button) => {
+		const label = article.dataset.copy ?? '';
+		button.textContent = label;
+		button.hidden = false;
+		button.addEventListener('click', async () => {
+			const code = button.closest('.code')?.querySelector('pre')?.innerText ?? '';
+			try {
+				await navigator.clipboard.writeText(code);
+				button.textContent = article.dataset.copied ?? label;
+				setTimeout(() => (button.textContent = label), 1200);
+			} catch {}
+		});
+	});
+
+	// Reading progress bar and the current table-of-contents entry
+	const progress = document.querySelector<HTMLElement>('.progress');
+	const prose = document.querySelector<HTMLElement>('.prose');
+	const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
+	const targets = links.map((link) => document.getElementById(decodeURIComponent(link.hash.slice(1))));
+	if (progress && prose) {
+		const update = () => {
+			const r = prose.getBoundingClientRect();
+			progress.style.transform = `scaleX(${Math.min(Math.max(-r.top / Math.max(r.height - innerHeight, 1), 0), 1)})`;
+			let current = 0;
+			targets.forEach((target, i) => {
+				if (target && target.getBoundingClientRect().top < 120) current = i;
+			});
+			links.forEach((link, i) => link.classList.toggle('active', i === current));
+		};
+		addEventListener('scroll', update, { passive: true });
+		update();
+	}
+</script>

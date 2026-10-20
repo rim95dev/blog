@@ -1,0 +1,7 @@
+---
+// For missing files outside the language folders (/foo.txt etc.). 404s for language and clean URLs use /ko/404 and /en/404.
+import NotFound from '../components/NotFound.astro';
+import { DEFAULT_LANG } from '../lang';
+---
+
+<NotFound lang={DEFAULT_LANG} />
