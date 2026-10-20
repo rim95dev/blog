@@ -68,4 +68,6 @@ jobs:
 
       - name: Cloudflare secrets missing
         if: env.HAS_CLOUDFLARE != 'true'
-        run: echo "::notice::Skipped deploy: CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID secrets are not set (docs/deploy.md)"
+        # A block scalar: a plain value cannot contain ": "
+        run: |
+          echo "::notice::Skipped deploy: CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID secrets are not set (docs/deploy.md)"
