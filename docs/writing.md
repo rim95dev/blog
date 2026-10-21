@@ -56,6 +56,17 @@ While there are no notes at all, the build logs one warning (`No files found mat
 - `##` headings form the table of contents (shown when there are two or more). Use `###` below them.
 - Code blocks: put the file name on the opening fence, `` ```ts title="worker/index.ts" ``. Without one, the caption shows the language.
 - Footnotes: `text[^1]`, then `[^1]: note` anywhere; they collect at the end.
+- Images: put the file in the note's folder and write `![description](./file.png)`; both languages share it. Astro resizes it and serves WebP.
+  For a caption, wrap it in a figure (the blank lines around the image are required):
+
+  ```mdx
+  <figure class="figure">
+
+  ![The card shown when a link is shared](./card.png)
+
+  <figcaption>The card shown when a link is shared</figcaption>
+  </figure>
+  ```
 - An image with light and dark versions: `<img class="only-light" …>` and `<img class="only-dark" …>`.
 
 ## 5. Translation

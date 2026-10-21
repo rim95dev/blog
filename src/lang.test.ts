@@ -51,7 +51,7 @@ describe('paths', () => {
 		for (const path of ['/', '/notes', '/notes/', '/notes/abc', '/resume', '/kor']) {
 			expect(isCleanPath(path), path).toBe(true);
 		}
-		for (const path of ['/ko', '/ko/', '/en/notes/abc', '/_astro/x.css', '/robots.txt', '/ko/rss.xml', '/favicon.svg']) {
+		for (const path of ['/ko', '/ko/', '/en/notes/abc', '/_astro/x.css', '/_image', '/robots.txt', '/ko/rss.xml', '/favicon.svg']) {
 			expect(isCleanPath(path), path).toBe(false);
 		}
 	});

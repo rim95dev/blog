@@ -37,6 +37,9 @@
 }
 html {
 	-webkit-text-size-adjust: 100%;
+	/* With overflow set here, body's own overflow-x stays on body and really clips: the character canvases reach
+	   past the page edge for flying pieces, and phones (iOS) would otherwise let the page pan sideways into that space */
+	overflow-x: clip;
 }
 body {
 	margin: 0;

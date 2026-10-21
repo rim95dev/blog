@@ -62,13 +62,14 @@ export function splitLangPath(path: string): [Lang, string] | null {
 }
 
 /**
- * Whether a path is a clean URL that needs a language picked. Language URLs, build output (/_astro/)
- * and files with an extension (robots.txt etc.) are not. Paths with a trailing slash count too
+ * Whether a path is a clean URL that needs a language picked. Language URLs, Astro's own paths
+ * (/_astro/ build output, the dev server's /_image endpoint; anything starting with /_) and files with
+ * an extension (robots.txt etc.) are not. Paths with a trailing slash count too
  * (the Worker answers them with a 301 that drops the slash).
  */
 export function isCleanPath(path: string): boolean {
 	if (splitLangPath(path.replace(/\/+$/, '') || '/')) return false;
-	if (path.startsWith('/_astro/')) return false;
+	if (path.startsWith('/_')) return false;
 	const last = path.split('/').filter(Boolean).pop() ?? '';
 	return !last.includes('.');
 }

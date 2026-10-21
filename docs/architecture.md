@@ -38,7 +38,7 @@ On the dev server every 404 is the English `src/pages/404.astro`; the per-langua
 - `www.rim95.dev` → `rim95.dev` with a 301 (path and query kept)
 - Clean URLs: a trailing slash gets a 301 without it; otherwise the Worker picks a language and serves the `/ko/…` or `/en/…` static file at the same URL,
   with `Content-Language`, `Vary: Accept-Language, Cookie` and `Cache-Control: private, no-cache`. The same URL is a different language per visitor, so it must stay out of shared caches.
-- Language URLs and files (`robots.txt` etc.) pass through unchanged.
+- Language URLs, files (`robots.txt` etc.) and Astro's own paths starting with `/_` pass through unchanged.
 - Any host other than production (`PROD_HOST`) gets `X-Robots-Tag: noindex`, so workers.dev and preview URLs never become duplicate content in search.
 - Security headers (`nosniff`, `Referrer-Policy`, `Permissions-Policy`).
 
