@@ -53,6 +53,7 @@ While there are no notes at all, the build logs one warning (`No files found mat
 ## 4. Writing details
 
 - The first paragraph is set slightly larger; make it the summary.
+- A line break inside a paragraph is kept as a line break (unlike plain Markdown); a blank line starts a new paragraph.
 - `##` headings form the table of contents (shown when there are two or more). Use `###` below them.
 - Code blocks: put the file name on the opening fence, `` ```ts title="worker/index.ts" ``. Without one, the caption shows the language.
 - Footnotes: `text[^1]`, then `[^1]: note` anywhere; they collect at the end.
@@ -68,6 +69,17 @@ While there are no notes at all, the build logs one warning (`No files found mat
   </figure>
   ```
 - An image with light and dark versions: `<img class="only-light" …>` and `<img class="only-dark" …>`.
+- Short clips (instead of GIFs): put `<name>.mp4` and a poster frame `<name>.jpg` in `public/notes/<slug>/`, then
+
+  ```mdx
+  import Video from '../../../components/Video.astro';
+
+  <Video src="/notes/<slug>/<name>.mp4" width={1280} height={720} caption="…" />
+  ```
+
+  It plays muted and looping while on screen; a click pauses it; reduced-motion visitors get the poster and controls.
+  Encode as H.264 without audio, at most 1280 wide, a few MB per clip (the file stays in git history forever).
+  The files sit in `public/`, not next to the note, because only the Worker answers the byte ranges Safari needs to play video.
 
 ## 5. Translation
 

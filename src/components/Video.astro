@@ -1,0 +1,49 @@
+---
+/* Video.astro — a short clip in a note, played like a GIF: muted, looping, inline, while it is on screen. A click pauses it.
+ * Visitors who ask for reduced motion, or have no JavaScript, get the poster and the player controls instead.
+ * Files live in public/notes/<slug>/, not next to the note: build output skips the Worker, which answers the byte ranges Safari needs (worker/index.ts).
+ */
+
+interface Props {
+	/** '/notes/<slug>/<name>.mp4' */
+	src: string;
+	width: number;
+	height: number;
+	caption?: string;
+	/** Defaults to the same path ending in .jpg */
+	poster?: string;
+}
+
+const { src, width, height, caption, poster = src.replace(/\.\w+$/, '.jpg') } = Astro.props;
+---
+
+<figure class="figure video">
+	<video src={src} poster={poster} width={width} height={height} muted loop playsinline controls preload="metadata" data-clip></video>
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<script>
+	if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		const visible = new IntersectionObserver((entries) => {
+			for (const { target, isIntersecting } of entries) {
+				const video = target as HTMLVideoElement;
+				if (video.dataset.paused) continue;
+				if (isIntersecting) void video.play().catch(() => {});
+				else video.pause();
+			}
+		});
+		document.querySelectorAll<HTMLVideoElement>('video[data-clip]').forEach((video) => {
+			video.controls = false;
+			video.addEventListener('click', () => {
+				if (video.paused) {
+					delete video.dataset.paused;
+					void video.play().catch(() => {});
+				} else {
+					video.dataset.paused = 'true';
+					video.pause();
+				}
+			});
+			visible.observe(video);
+		});
+	}
+</script>

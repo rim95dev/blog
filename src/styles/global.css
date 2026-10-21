@@ -514,6 +514,10 @@ html[lang='ko']
 :where(.prose) :where(p, ul, ol, figure, table, blockquote) {
 	margin-block: 0;
 }
+/* A line break typed inside a paragraph stays a line break; a blank line starts a new paragraph */
+.prose p {
+	white-space: pre-line;
+}
 .prose > p:first-child {
 	font-size: 1.06rem;
 }
@@ -525,8 +529,12 @@ html[lang='ko']
 	font-size: 1.15rem;
 	font-weight: 600;
 	line-height: 1.4;
-	margin: 2.6rem 0 0;
+	/* Wide gaps between sections, so each reads as its own part */
+	margin: 4.5rem 0 0;
 	scroll-margin-top: 2rem;
+}
+.prose > :first-child {
+	margin-top: 0;
 }
 .prose h3 {
 	font-family: var(--mono);
@@ -632,6 +640,17 @@ html[lang='ko']
 }
 .figure {
 	margin-inline: 0;
+}
+/* Clips (src/components/Video.astro): a click pauses them, so the pointer says so */
+.figure video {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+.figure video:not([controls]) {
+	cursor: pointer;
 }
 .figure figcaption {
 	margin-top: 0.5rem;

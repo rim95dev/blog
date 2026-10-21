@@ -39,6 +39,8 @@ On the dev server every 404 is the English `src/pages/404.astro`; the per-langua
 - Clean URLs: a trailing slash gets a 301 without it; otherwise the Worker picks a language and serves the `/ko/…` or `/en/…` static file at the same URL,
   with `Content-Language`, `Vary: Accept-Language, Cookie` and `Cache-Control: private, no-cache`. The same URL is a different language per visitor, so it must stay out of shared caches.
 - Language URLs, files (`robots.txt` etc.) and Astro's own paths starting with `/_` pass through unchanged.
+- Video (`.mp4`, `.webm`) is answered in byte ranges (206). The ASSETS binding ignores `Range` and always sends the whole file, and Safari will not play video without ranges.
+  `/_astro/` skips the Worker, so clips live in `public/` (see [writing.md](writing.md) §4).
 - Any host other than production (`PROD_HOST`) gets `X-Robots-Tag: noindex`, so workers.dev and preview URLs never become duplicate content in search.
 - Security headers (`nosniff`, `Referrer-Policy`, `Permissions-Policy`).
 
@@ -81,6 +83,7 @@ No framework: Astro components render HTML at build time, and a few small script
 | Wide screens | `global.css` | The root font size grows at 1920, 2560 and 3400 CSS px, so everything sized in rem scales evenly. Size layout in rem, not px |
 | Pixel character | `src/character/` | Canvas pieces that scatter under the pointer (`mount.ts`), drawn from one sprite (`sprite.ts`) that also produces the favicon, touch icon, share card and console image at build time (`icons.ts`). The console greeting inlines its image as a data URL, the only kind DevTools draws |
 | Code blocks | `astro.config.mjs`, `integrations/code-figure.ts` | Shiki with GitHub light and dark themes through `light-dark()`, wrapped in a captioned figure with a copy button |
+| Clips | `src/components/Video.astro` | GIF-like muted loops from `public/notes/<slug>/`, played while on screen |
 | ⌘K palette | `src/layouts/Base.astro` | Jumps between pages. Full-text search (Pagefind) is planned |
 | Share card | `src/og.ts`, `src/pages/og/[lang].png.ts` | `og:image` for every page, one per language (`/og/ko.png`, `/og/en.png`): the whole character and rim95.dev in a dark terminal window. Built with satori (layout, text as paths, static font files from npm) and sharp (PNG) |
 | Career periods | `src/period.ts`, `src/career.ts` | Computed at build time from `src/content/resume.yaml` |
